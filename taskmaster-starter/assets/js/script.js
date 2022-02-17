@@ -1,13 +1,35 @@
 var tasks = {};
 
+function auditTask(taskEl) {
+  // get date from task element
+  var date = $(taskEl).find("span").text().trim();
+
+  // convert to moment object at 5:00pm
+  var time = moment(date, "L").set("hour", 17);
+
+  // remove any old classes from element
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+
+  // apply new class if task is near/over due date
+  if (moment().isAfter(time)) {
+    $(taskEl).addClass("list-group-item-danger");
+  } else if (Math.abs(moment().diff(time, "days")) <= 2) {
+    $(taskEl).addClass("list-group-item-warning");
+  }
+}
+
 var createTask = function (taskText, taskDate, taskList) {
   // create elements that make up a task item
   var taskLi = $("<li>").addClass("list-group-item");
+
   var taskSpan = $("<span>").addClass("badge badge-primary badge-pill").text(taskDate);
   var taskP = $("<p>").addClass("m-1").text(taskText);
 
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
+
+  // check due date
+  auditTask(taskLi);
 
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
@@ -73,15 +95,28 @@ $(".list-group").on("blur", "textarea", function () {
 $(".list-group").on("click", "span", function () {
   //create a textarea, give the time element's value to textarea
   var date = $(this).text().trim();
-  var dateInput = $("<input>").attr("type", "text").addClass("form-control").val(date);
+  var dateInput = $("<input>")
+    .attr("type", "text")
+    .addClass("form-control")
+    .val(date)
+    .datepicker({
+      minDate: 1,
+      onClose: function () {
+        // when calendar is closed, force a "change" event on the `dateInput`
+        $(this).trigger("change");
+      },
+    });
+
   //update the data in localstorage
 
   //replace the time element with textarea
   $(this).replaceWith(dateInput);
+
+  // automatically bring up the calendar
   dateInput.trigger("focus");
 });
 
-$(".list-group").on("blur", "input", function () {
+$(".list-group").on("change", "input", function () {
   //create span, give the input's value to span's text
   var date = $(this).val().trim();
   var status = $(this).closest(".list-group").attr("id").replace("list-", "");
@@ -95,6 +130,7 @@ $(".list-group").on("blur", "input", function () {
 
   // replace input with span elemtn
   $(this).replaceWith(taskSpan);
+  auditTask(taskSpan.parent("li"));
 });
 
 // modal was triggered
@@ -189,6 +225,7 @@ $(".card .list-group").sortable({
   },
 });
 
+// make the trash area droppable
 $("#trash").droppable({
   accept: ".card .list-group-item",
   tolerance: "touch",
@@ -202,4 +239,8 @@ $("#trash").droppable({
   out: function (event, ui) {
     console.log("out");
   },
+});
+
+$("#modalDueDate").datepicker({
+  minDate: 1,
 });
