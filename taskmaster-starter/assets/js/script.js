@@ -244,3 +244,21 @@ $("#trash").droppable({
 $("#modalDueDate").datepicker({
   minDate: 1,
 });
+
+function auditTask(taskEl) {
+  // console.log(taskEl.find("span").text());
+  var date = moment($(taskEl).find("span").text(), "MM/DD/YYYY");
+  // console.log(date);
+  if (moment().isAfter(date)) {
+    $(taskEl).css("background-color", "red");
+  } else if (Math.abs(moment().diff(date, "days")) >= 2) {
+    $(taskEl).css("background-color", "yellow");
+  }
+}
+
+// refresh the page every 30 mins
+setInterval(function () {
+  $(".card .list-group-item").each(function (index, el) {
+    auditTask(el);
+  });
+}, 1000);
