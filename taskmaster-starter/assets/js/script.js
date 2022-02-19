@@ -184,6 +184,14 @@ $(".card .list-group").sortable({
   scroll: false,
   tolerance: "pointer",
   helper: "clone",
+  over: function (event) {
+    $(this).addClass("dropover-active");
+    console.log("over", event.target);
+  },
+  out: function (event) {
+    $(this).removeClass("dropover-active");
+    console.log("out", event.target);
+  },
   activate: function (event) {
     $(this).addClass("dropover");
     $(".bottom-trash").addClass("bottom-trash-drag");
@@ -195,14 +203,7 @@ $(".card .list-group").sortable({
     $(".bottom-trash").removeClass("bottom-trash-drag");
     console.log("deactivate", this);
   },
-  over: function (event) {
-    $(this).addClass("dropover-active");
-    console.log("over", event.target);
-  },
-  out: function (event) {
-    $(this).removeClass("dropover-active");
-    console.log("out", event.target);
-  },
+
   update: function (event) {
     // array to store the task data in
     var tempArr = [];
@@ -256,12 +257,13 @@ $("#modalDueDate").datepicker({
 
 function auditTask(taskEl) {
   // console.log(taskEl.find("span").text());
-  var date = moment($(taskEl).find("span").text(), "MM/DD/YYYY");
+  var date = $(taskEl).find("span").text().trim();
+  var time = moment(date, "L").set("hour", 17);
   // console.log(date);
-  if (moment().isAfter(date)) {
-    $(taskEl).css("background-color", "red");
-  } else if (Math.abs(moment().diff(date, "days")) >= 2) {
-    $(taskEl).css("background-color", "yellow");
+  if (moment().isAfter(time)) {
+    $(taskEl).addClass("list-group-item-danger");
+  } else if (Math.abs(moment().diff(date, "days")) <= 2) {
+    $(taskEl).addClass("list-group-item-warning");
   }
 }
 
